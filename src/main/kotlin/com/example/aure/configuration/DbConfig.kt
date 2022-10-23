@@ -8,15 +8,12 @@ import org.springframework.context.annotation.Primary
 import javax.sql.DataSource
 
 
+@Configuration
 class DbConfig {
-
-    @Configuration
-    class DbConfig {
-        @Bean(name = ["aure-db"])
-        @ConfigurationProperties(prefix = "aure-dataservice")
-        @Primary // nødvendig?
-        fun createM2DataService(): DataSource {
-            return DataSourceBuilder.create().build()
-        }
+    @Bean(name = ["aure-db"])
+    @ConfigurationProperties(prefix = "aure-dataservice")
+    @Primary // nødvendig?
+    fun createM2DataService(): DataSource {
+        return DataSourceBuilder.create().build()
     }
 }
