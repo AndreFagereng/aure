@@ -1,8 +1,8 @@
 package com.example.aure.db
 
-import com.example.aure.model.UvIndex
-import com.example.aure.model.Weather
-import com.example.aure.model.Wind
+import com.example.aure.model.Weather.UvIndex
+import com.example.aure.model.Weather.Weather
+import com.example.aure.model.Weather.Wind
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
@@ -19,18 +19,15 @@ class WeatherDaoImpl {
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource!!)
     }
 
-    fun getWeatherDB(ids: List<Int?>): List<Weather> {
-        var db_ids = ids.mapNotNull { id -> id }
-
-        if (db_ids.isEmpty()) {
-            println("shoulnt happend")
-        }
-
+    fun getWeather(ids: List<Int>): List<Weather> {
         val weatherResult =
-            namedParameterJdbcTemplate.query(getWeatherQuery, mapOf<String, List<Int>>("catchreport_id" to db_ids)) { rs: ResultSet, _ ->
+            namedParameterJdbcTemplate.query(
+                getWeatherQuery,
+                mapOf<String, List<Int>>("catchreport_id" to ids)
+            ) { rs: ResultSet, _ ->
                 Weather(
-                    rs.getInt("id"),
                     rs.getInt("catchreport_id"),
+                    rs.getString("user_id"),
                     rs.getBigDecimal("temperature"),
                     rs.getBigDecimal("apparentTemperature"),
                     Wind(
@@ -54,9 +51,11 @@ class WeatherDaoImpl {
         return weatherResult
     }
 
-    fun createWeatherDB(weather: Weather, catchreport_id: Int) {
-        namedParameterJdbcTemplate.update(createWeatherQuery, mapOf(
+    fun createWeather(user_id: String, catchreport_id: Int, weather: Weather) {
+        namedParameterJdbcTemplate.update(
+            createWeatherQuery, mapOf(
             "catchreport_id" to catchreport_id,
+            "user_id" to user_id,
             "temperature" to weather.temperature,
             "apparentTemperature" to weather.apparentTemperature,
             "wind_direction" to weather.wind.direction,
@@ -77,11 +76,18 @@ class WeatherDaoImpl {
     companion object {
         private val weatherTable: String = "aure.weather"
 
+        // Selects from weather on catchreport_id (linked to catchreport id key)
         val getWeatherQuery = """ SELECT * FROM $weatherTable where catchreport_id in (:catchreport_id)"""
-        val createWeatherQuery = """ INSERT INTO $weatherTable (catchreport_id, temperature, apparentTemperature, wind_direction, wind_compassDirection, 
-            wind_gust, uvindex_value, uvindex_category, visibility, isDayLight, humidity, dewPoint, pressure, pressureTrend, symbolName)
-            VALUES (:catchreport_id, :temperature, :apparentTemperature, :wind_direction, :wind_compassDirection, 
-            :wind_gust, :uvindex_value, :uvindex_category, :visibility, :isDayLight, :humidity, :dewPoint, :pressure, :pressureTrend, :symbolName) """.trimMargin()
+
+        // Inserts row into weather
+        val createWeatherQuery =
+            """ INSERT INTO $weatherTable
+                 (catchreport_id, user_id, temperature, apparentTemperature, wind_direction, 
+                 wind_compassDirection, wind_gust, uvindex_value, uvindex_category, visibility, 
+                 isDayLight, humidity, dewPoint, pressure, pressureTrend, symbolName)
+            VALUES (:catchreport_id, :user_id, :temperature, :apparentTemperature, :wind_direction, 
+            :wind_compassDirection, :wind_gust, :uvindex_value, :uvindex_category, :visibility, 
+            :isDayLight, :humidity, :dewPoint, :pressure, :pressureTrend, :symbolName) """.trimMargin()
     }
 
 

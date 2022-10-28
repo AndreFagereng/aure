@@ -1,5 +1,6 @@
-package com.example.aure.model
+package com.example.aure.model.Catch
 
+import com.example.aure.model.Weather.Weather
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -10,9 +11,10 @@ data class CatchReport(
     val weather: Weather
     )
 
-@JsonIgnoreProperties("id")
+@JsonIgnoreProperties("user_id")
 data class Catch(
     val id: Int? = null,
+    val user_id: String? = null,
     val water: String,
     val species: String,
     val weight: BigDecimal,
@@ -23,3 +25,4 @@ data class Catch(
     val longitude: BigDecimal,
     val latitude: BigDecimal
     )
+

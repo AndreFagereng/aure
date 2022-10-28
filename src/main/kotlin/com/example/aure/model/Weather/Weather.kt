@@ -1,4 +1,4 @@
-package com.example.aure.model
+package com.example.aure.model.Weather
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.math.BigDecimal
@@ -14,11 +14,10 @@ data class UvIndex(
     val category: String
 )
 
-@JsonIgnoreProperties("id", "catchreport_id")
+@JsonIgnoreProperties("id", "catchreport_id", "user_id")
 data class Weather(
-
-    val id: Int? = null,
     val catchreport_id: Int? = null,
+    val user_id: String? = null,
     val temperature: BigDecimal,
     val apparentTemperature: BigDecimal,
     val wind: Wind,
