@@ -1,50 +1,46 @@
 package com.example.aure.controller
 
-import com.example.aure.model.Catch
-import com.example.aure.model.CatchReport
+import com.example.aure.model.Catch.CatchReport
 import com.example.aure.service.CatchReportService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.web.bind.annotation.*
+import java.security.Principal
 
 
 @RestController
-class TestController {
+@RequestMapping("/api/catchReport")
+class CatchController {
 
     @Autowired
     private lateinit var catchReportService: CatchReportService
 
-
-    @GetMapping("/")
-    fun ping(): String{
-        return "pong"
+    @GetMapping(produces = arrayOf("application/json"))
+    private fun getCatchReport(principal: JwtAuthenticationToken): List<CatchReport> {
+        println(principal.name)
+        println(principal.tokenAttributes)
+        return catchReportService.getCatchReport(principal.name)
     }
 
-    @GetMapping("/getCatch", produces = arrayOf("application/json"))
-    fun getCatch(): List<CatchReport> {
-        val catchResult = catchReportService.getCatchReport()
-        return catchResult
+    @PostMapping(consumes = arrayOf("application/json"))
+    fun createCatchReport(principal: JwtAuthenticationToken, @RequestBody catchReport: CatchReport): String {
+        println(principal.name)
+        println(principal.tokenAttributes)
+        catchReportService.createCatchReport(principal.name, catchReport)
+        return "OK!"
     }
 
-    @PostMapping("/createCatchReport", consumes = arrayOf("application/json"))
-    fun createCatch(@RequestBody catchReport: CatchReport): String {
-        println("Catch $catchReport")
-        val result = catchReportService.createCatchReport(catchReport)
-        return when (result) {
-            "Success" -> {
-                "OK!"
-            }
-            "Failed" -> {
-                "Failed"
-            }
-            else -> {
-                "Unknown error"
-            }
-        }
+
+    @PutMapping(consumes = arrayOf("application/json"))
+    private fun updateCatchReport(principal: JwtAuthenticationToken, @RequestBody catchReport: CatchReport): String {
+        println(principal.name)
+        println(principal.tokenAttributes)
+        println("catchReport $catchReport")
+        catchReportService.updateCatchReport(principal.name, catchReport)
+        return "OK!"
     }
+
 
 }
 

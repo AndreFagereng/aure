@@ -1,9 +1,9 @@
 package com.example.aure.service
 
 import com.example.aure.db.CatchDaoImpl
-import com.example.aure.db.WeatherDaoImpl
-import com.example.aure.model.Catch
-import com.example.aure.model.CatchReport
+import com.example.aure.db.CatchReportDaoImpl
+import com.example.aure.model.Catch.Catch
+import com.example.aure.model.Catch.CatchReport
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -14,42 +14,27 @@ class CatchReportService {
     private lateinit var catchDaoImpl: CatchDaoImpl
 
     @Autowired
-    private lateinit var weatherDaoImpl: WeatherDaoImpl
+    private lateinit var catchReportDaoImpl: CatchReportDaoImpl
 
-
-    fun getCatchReport(): List<CatchReport>{
-        val catchResult = catchDaoImpl.getCatchDB()
-        val catchIds = catchResult.map { catch -> catch.id }
-
-        if (catchIds.isEmpty()) {
-            println("getCatchReport -> No catches fetched..")
-            return emptyList()
-        }
-
-        println(catchIds)
-
-        val weatherResult = weatherDaoImpl.getWeatherDB(catchIds)
-        println(catchIds)
-        println(weatherResult)
-        return catchIds.map { id ->
-            CatchReport(
-                catch = catchResult.single{catch -> catch.id == id},
-                weather = weatherResult.single{weather -> weather.catchreport_id == id}
-            )
-        }
+    fun getCatchReport(user_id: String): List<CatchReport> {
+        return catchReportDaoImpl.getCatchReport(user_id)
     }
 
-    fun createCatchReport(catchReport: CatchReport): String {
-        val createCatchResultId = catchDaoImpl.createCatchDB(catchReport.catch)
+    fun createCatchReport(user_id: String, catchReport: CatchReport) {
+        catchReportDaoImpl.createCatchReport(user_id, catchReport)
+    }
 
-        if (createCatchResultId == -1) {
-            return "Failed"
-        }
-
-        weatherDaoImpl.createWeatherDB(catchReport.weather, createCatchResultId)
+    fun updateCatchReport(user_id: String, catchReport: CatchReport) {
+        catchReportDaoImpl.updateCatchReport(user_id, catchReport)
+    }
 
 
-        return "Success"
+    fun getCatch(user_id: String): List<Catch>{
+        return catchDaoImpl.getCatch(user_id)
+    }
+
+    fun createCatch(user_id: String, catchReport: CatchReport) {
+        catchDaoImpl.createCatch(user_id, catchReport.catch)
     }
 
 }
