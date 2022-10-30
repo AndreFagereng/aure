@@ -4,6 +4,8 @@ import com.example.aure.model.Catch.Catch
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import javax.annotation.Resource
 import javax.sql.DataSource
 
@@ -37,7 +39,7 @@ class CatchDaoImpl {
                 rs.getString("species"),
                 rs.getBigDecimal("weight"),
                 rs.getBigDecimal("length"),
-                rs.getDate("captureDate").toLocalDate(),
+                rs.getTimestamp("captureDate").toLocalDateTime(),
                 rs.getString("fly"),
                 rs.getBigDecimal("waterTemp"),
                 rs.getBigDecimal("longitude"),
