@@ -10,6 +10,8 @@ import com.example.aure.model.Weather.Wind
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
+import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import javax.annotation.Resource
 import javax.sql.DataSource
 
@@ -33,6 +35,7 @@ class CatchReportDaoImpl {
 
     fun createCatchReport(user_id: String, catchReport: CatchReport) {
         val catchReportMap = toMapAndExclude(catchReport, include = mapOf("user_id" to user_id), exclude = listOf("id", "user_id", "catchreport_id"))
+        println(catchReportMap)
         namedParameterJdbcTemplate.query(
             POST_QUERY, catchReportMap
         ){}
@@ -97,7 +100,7 @@ class CatchReportDaoImpl {
                     rs.getString("species"),
                     rs.getBigDecimal("weight"),
                     rs.getBigDecimal("length"),
-                    rs.getDate("captureDate").toLocalDate(),
+                    rs.getTimestamp("captureDate").toLocalDateTime(),
                     rs.getString("fly"),
                     rs.getBigDecimal("waterTemp"),
                     rs.getBigDecimal("longitude"),
