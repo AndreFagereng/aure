@@ -1,47 +1,35 @@
 package com.example.aure.configuration
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.config.Customizer
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
-import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
 import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.MappedJwtClaimSetConverter
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
 
 
 @Configuration
-@EnableWebSecurity(debug = true)
 class SecurityConfiguration {
 
     @Throws(java.lang.Exception::class)
+    @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
 
-        http
-            .cors().disable()
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        http.cors().disable().csrf().disable().authorizeRequests()
+            .antMatchers("/ping", "/")
+            .permitAll()
             .and()
-            .authorizeRequests(
-                Customizer { configurer ->
-                    configurer
-                        .antMatchers("/ping")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated()
-                }
-            ) // Enable JWT Authentication
-            .oauth2ResourceServer().jwt()
-
-
+            .authorizeRequests()
+            .anyRequest()
+            .authenticated()
+            .and()
+            .oauth2ResourceServer()
+            .jwt()
         return http.build()
-  }
+    }
 }
 @Configuration
 class JwtConfig {
