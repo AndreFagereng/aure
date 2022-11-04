@@ -27,7 +27,6 @@ class WeatherDaoImpl {
             ) { rs: ResultSet, _ ->
                 Weather(
                     rs.getInt("catchreport_id"),
-                    rs.getString("user_id"),
                     rs.getBigDecimal("temperature"),
                     rs.getBigDecimal("apparentTemperature"),
                     Wind(

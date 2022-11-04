@@ -18,25 +18,17 @@ class CatchController {
 
     @GetMapping(produces = arrayOf("application/json"))
     private fun getCatchReport(principal: JwtAuthenticationToken): List<CatchReport> {
-        println(principal.name)
-        println(principal.tokenAttributes)
         return catchReportService.getCatchReport(principal.name)
     }
 
     @PostMapping(consumes = arrayOf("application/json"))
     fun createCatchReport(principal: JwtAuthenticationToken, @RequestBody catchReport: CatchReport): String {
-        println(principal.name)
-        println(principal.tokenAttributes)
         catchReportService.createCatchReport(principal.name, catchReport)
         return "OK!"
     }
 
-
     @PutMapping(consumes = arrayOf("application/json"))
     private fun updateCatchReport(principal: JwtAuthenticationToken, @RequestBody catchReport: CatchReport): String {
-        println(principal.name)
-        println(principal.tokenAttributes)
-        println("catchReport $catchReport")
         catchReportService.updateCatchReport(principal.name, catchReport)
         return "OK!"
     }

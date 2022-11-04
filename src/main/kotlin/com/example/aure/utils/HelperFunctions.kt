@@ -10,19 +10,18 @@ class HelperFunctions {
  * Turns object (data class) in to Map<String, String>,
  * flattens, and includes/excludes keys/values.
  */
-fun <T : Any> toMapAndExclude(obj: T, include: Map<String, String>, exclude: List<String>): Map<String, Any?> {
-    println(obj)
+fun <T : Any> toMapAndExclude(
+    obj: T,
+    include: Map<String, String> = emptyMap(),
+    exclude: List<String> = emptyList()
+): Map<String, Any?> {
     val mapResult = toMap(obj).toMutableMap()
-    println()
-    println(mapResult)
-    println()
-    val finalMap = hashMapOf <String, Any?>()
+    val finalMap = hashMapOf<String, Any?>()
+
     flattenMap(mapResult, finalMap)
-    println(finalMap)
-    println()
-    val mutableFinalMap = finalMap.filter { it  -> it.key !in exclude }.toMutableMap()
-    include.forEach{
-        (key, value) -> mutableFinalMap.put(key, value)
+    val mutableFinalMap = finalMap.filter { it -> it.key !in exclude }.toMutableMap()
+    include.forEach { (key, value) ->
+        mutableFinalMap[key] = value
     }
     println("toMapAndExclude -> $mutableFinalMap")
     return mutableFinalMap
