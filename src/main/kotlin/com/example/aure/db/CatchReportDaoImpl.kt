@@ -35,7 +35,6 @@ class CatchReportDaoImpl {
 
     fun createCatchReport(user_id: String, catchReport: CatchReport) {
         val catchReportMap = toMapAndExclude(catchReport, include = mapOf("user_id" to user_id), exclude = listOf("id", "user_id", "catchreport_id"))
-        println(catchReportMap)
         namedParameterJdbcTemplate.query(
             POST_QUERY, catchReportMap
         ){}
@@ -49,27 +48,25 @@ class CatchReportDaoImpl {
     }
 
     companion object {
-        val CR = Tables.CATCH_REPORT
-        val WH = Tables.WEATHER
 
         // Selects catchreport and weather based on user_id and primary/foreignkey
         val GET_QUERY = """
-            SELECT * FROM $CR 
-            LEFT JOIN $WH 
-            ON ($CR.id = $WH.catchreport_id)
-            WHERE $CR.user_id = (:user_id)
+            SELECT * FROM ${Tables.CATCH_REPORT} 
+            LEFT JOIN ${Tables.WEATHER} 
+            ON (${Tables.CATCH_REPORT}.id = ${Tables.WEATHER}.catchreport_id)
+            WHERE ${Tables.CATCH_REPORT}.user_id = (:user_id)
         """.trimIndent()
 
         // Updates current catchreport with updated values
         val PUT_QUERY = """
             WITH cupdate as (
-                UPDATE $CR
+                UPDATE ${Tables.CATCH_REPORT}
                 SET water = (:water), species = (:species), weight = (:weight), length = (:length), captureDate = (:captureDate), fly = (:fly), waterTemp = (:waterTemp), longitude = (:longitude), latitude = (:latitude) 
                 WHERE user_id = (:user_id) 
                 AND id = (:id)
                 RETURNING id
             )
-            UPDATE $WH
+            UPDATE ${Tables.WEATHER}
             SET  temperature = (:temperature), apparenttemperature = (:apparentTemperature), wind_direction = (:direction), wind_compassdirection = (:compassDirection), 
                                 wind_gust = (:gust), uvindex_value = (:value), uvindex_category = (:category), visibility = (:visibility), isDayLight = (:isDayLight), 
                                 humidity = (:humidity), dewPoint = (:dewPoint), pressure = (:pressure), pressuretrend = (:pressureTrend), symbolname = (:symbolName)
@@ -82,11 +79,11 @@ class CatchReportDaoImpl {
         // Inserts and links catchreport and weather tables on id/catchreport_id.
         val POST_QUERY = """
             WITH cinsert as (
-                INSERT INTO $CR (user_id, water, species, weight, length, captureDate, fly, waterTemp, longitude, latitude)
+                INSERT INTO ${Tables.CATCH_REPORT} (user_id, water, species, weight, length, captureDate, fly, waterTemp, longitude, latitude)
                 VALUES (:user_id, :water, :species, :weight, :length, :captureDate, :fly, :waterTemp, :longitude, :latitude) 
                 RETURNING id
             )
-            INSERT INTO $WH (catchreport_id, user_id, temperature, apparenttemperature, wind_direction, wind_compassdirection, wind_gust, uvindex_value, uvindex_category, visibility, isDayLight, humidity, dewPoint, pressure, pressuretrend, symbolname)
+            INSERT INTO ${Tables.WEATHER} (catchreport_id, user_id, temperature, apparenttemperature, wind_direction, wind_compassdirection, wind_gust, uvindex_value, uvindex_category, visibility, isDayLight, humidity, dewPoint, pressure, pressuretrend, symbolname)
             VALUES ((SELECT id FROM cinsert), :user_id, :temperature, :apparentTemperature, :direction, :compassDirection, :gust, :value, :category, :visibility, :isDayLight, :humidity, :dewPoint, :pressure, :pressureTrend, :symbolName)
             RETURNING catchreport_id
         """.trimIndent()
@@ -95,7 +92,6 @@ class CatchReportDaoImpl {
             return CatchReport(
                 Catch(
                     rs.getInt("id"),
-                    rs.getString("user_id"),
                     rs.getString("water"),
                     rs.getString("species"),
                     rs.getBigDecimal("weight"),
@@ -107,7 +103,6 @@ class CatchReportDaoImpl {
                     rs.getBigDecimal("latitude")
                 ), Weather(
                     rs.getInt("catchreport_id"),
-                    rs.getString("user_id"),
                     rs.getBigDecimal("temperature"),
                     rs.getBigDecimal("apparentTemperature"),
                     Wind(

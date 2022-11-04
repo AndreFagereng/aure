@@ -1,26 +1,33 @@
 package com.example.aure.controller
 
 import com.example.aure.model.User.UserProfile
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RestController
+import com.example.aure.service.UserProfileService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import org.springframework.web.bind.annotation.*
 
 @RestController
+@RequestMapping("/api/userProfile")
 class UserController {
 
-    @GetMapping("/getUserProfile")
-    fun getUserProfile(): UserProfile {
-        TODO()
+    @Autowired
+    private lateinit var userProfileService: UserProfileService
+
+    @GetMapping
+    fun getUserProfile(principal: JwtAuthenticationToken): UserProfile {
+        return userProfileService.getUserProfile(principal.name)
     }
 
-    @GetMapping("/createUserProfile")
-    fun createUserProfile(userProfile: UserProfile) {
-        TODO()
+    @PostMapping
+    fun createUserProfile(principal: JwtAuthenticationToken, @RequestBody userProfile: UserProfile): String {
+        userProfileService.createOrUpdateUserProfile(principal.name, userProfile)
+        return "OK!"
     }
 
-    @PostMapping("/updateUserProfile")
-    fun updateUserProfile(): UserProfile {
-        TODO()
+    @PutMapping
+    fun updateUserProfile(principal: JwtAuthenticationToken, @RequestBody userProfile: UserProfile): String {
+        userProfileService.createOrUpdateUserProfile(principal.name, userProfile)
+        return "OK!"
     }
 
 }

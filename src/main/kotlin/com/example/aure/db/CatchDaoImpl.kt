@@ -34,7 +34,6 @@ class CatchDaoImpl {
         ) { rs: ResultSet, _ ->
             Catch(
                 rs.getInt("id"),
-                rs.getString("user_id"),
                 rs.getString("water"),
                 rs.getString("species"),
                 rs.getBigDecimal("weight"),
