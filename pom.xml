@@ -13,12 +13,29 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>aure</name>
 	<description>Spring Boot for Aure</description>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>2.16.60</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<properties>
 		<java.version>11</java.version>
 		<kotlin.version>1.6.21</kotlin.version>
 		<maven.compiler.release>11</maven.compiler.release>
 	</properties>
 	<dependencies>
+
+
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>

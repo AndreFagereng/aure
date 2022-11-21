@@ -1,8 +1,12 @@
 package com.example.aure.db
 
 import com.example.aure.db.utils.Tables
+import com.example.aure.model.Catch.Reel
+import com.example.aure.model.Catch.Rod
 import com.example.aure.model.User.UserProfile
-import com.example.aure.utils.toMapAndExclude
+import com.example.aure.utils.buildFieldQueryString
+import com.example.aure.utils.buildSetQueryString
+import com.example.aure.utils.buildValueQueryString
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
@@ -21,22 +25,32 @@ class UserProfileDaoImpl {
 
     fun getUserProfile(user_id: String): UserProfile {
         return namedParameterJdbcTemplate.query(
-            GET_QUERY, mapOf<String, String>("user_id" to user_id)
+            GET_QUERY(), mapOf<String, String>("user_id" to user_id)
         ) { rs: ResultSet, _ ->
             toUserProfile(rs)
         }.single()
     }
 
     fun createOrUpdateUserProfile(user_id: String, userProfile: UserProfile) {
-        val userProfileMap = toMapAndExclude(userProfile, include = mapOf("user_id" to user_id))
-        namedParameterJdbcTemplate.update(PUTPOST_QUERY, userProfileMap)
+        val userProfileMap = userProfile.buildUserProfileDatabaseMap(user_id)
+        namedParameterJdbcTemplate.update(PUTPOST_QUERY(
+            UserProfile.userProfileDatabaseFields()
+        ), userProfileMap)
     }
 
     private fun toUserProfile(rs: ResultSet): UserProfile {
         return UserProfile(
             rs.getString("nickname"),
-            rs.getString("rod"),
-            rs.getString("line"),
+            Rod(
+                rs.getString("rod_brand"),
+                rs.getString("rod_sizeClass"),
+            ),
+            Reel(
+                rs.getString("reel_brand"),
+                rs.getString("reel_sizeClass"),
+                rs.getString("reel_fishingline"),
+                rs.getString("reel_linetype"),
+            ),
             rs.getString("fisherType"),
             rs.getString("profileText")
         )
@@ -45,17 +59,19 @@ class UserProfileDaoImpl {
     companion object {
 
         // Selects catchreport and weather based on user_id and primary/foreignkey
-        val GET_QUERY = """
+        fun GET_QUERY() = """
             SELECT * FROM ${Tables.USER_PROFILE} 
             WHERE ${Tables.USER_PROFILE}.user_id = (:user_id)
         """.trimIndent()
 
-        val PUTPOST_QUERY = """
-            INSERT INTO ${Tables.USER_PROFILE} (user_id, nickname, rod, line, fisherType, profileText)
-            VALUES (:user_id, :nickname, :rod, :line, :fisherType, :profileText)
+        fun PUTPOST_QUERY(
+            userProfileFieldList: List<String>,
+        ) = """
+            INSERT INTO ${Tables.USER_PROFILE} (user_id, ${buildFieldQueryString(userProfileFieldList, prefix = "")}
+            VALUES (:user_id, ${buildValueQueryString(userProfileFieldList, prefix = "")}
             ON CONFLICT (user_id)
             DO UPDATE 
-            SET user_id = (:user_id), nickname = (:nickname), rod = (:rod), line = (:line), fisherType = (:fisherType), profileText = (:profileText)
+            SET user_id = (:user_id), ${buildSetQueryString(userProfileFieldList)}
             WHERE ${Tables.USER_PROFILE}.user_id = (:user_id)
         """.trimIndent()
 

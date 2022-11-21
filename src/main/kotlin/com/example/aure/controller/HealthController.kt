@@ -11,6 +11,7 @@ class HealthController {
     fun healthCheck(): String{
         return "pong"
     }
+
     @RequestMapping("/")
     fun check(): String{
         return "pong"
