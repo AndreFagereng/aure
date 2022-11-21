@@ -5,14 +5,27 @@ import kotlin.reflect.full.memberProperties
 
 class HelperFunctions {
 }
+/**
+ * SQL query builders for Fields, Values, Set.
+ * */
+fun buildFieldQueryString(fieldList: List<String>, prefix: String = "(", postfix: String = ")"): String {
+    return fieldList.joinToString(separator = ", ", prefix = prefix, postfix = postfix, transform = { it })
+}
+fun buildValueQueryString(fieldList: List<String>, prefix: String = "(", postfix: String = ")"): String {
+    return fieldList.joinToString(separator = ", ", prefix = prefix, postfix = postfix, transform = { ":$it" })
+}
+fun buildSetQueryString(fieldList: List<String>, prefix: String = "", postfix: String = ""): String {
+    return fieldList.joinToString(separator = ", ", prefix=prefix, postfix=postfix, transform = {"$it = (:$it)"})
+}
+
 
 /**
  * Turns object (data class) in to Map<String, String>,
  * flattens, and includes/excludes keys/values.
  */
-fun <T : Any> toMapAndExclude(
+fun <T : Any> toMapAndExcludeInclude(
     obj: T,
-    include: Map<String, String> = emptyMap(),
+    include: Map<String, Any?> = emptyMap(),
     exclude: List<String> = emptyList()
 ): Map<String, Any?> {
     val mapResult = toMap(obj).toMutableMap()

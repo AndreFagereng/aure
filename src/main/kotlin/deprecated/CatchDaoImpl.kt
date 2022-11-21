@@ -1,17 +1,16 @@
-package com.example.aure.db
+package deprecated
+/*
 
 import com.example.aure.model.Catch.Catch
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import javax.annotation.Resource
 import javax.sql.DataSource
 
 
 @Repository
-class CatchDaoImpl {
+class _CatchDaoImpl {
 
     private lateinit var namedParameterJdbcTemplate: NamedParameterJdbcTemplate
 
@@ -77,5 +76,6 @@ class CatchDaoImpl {
             """.trimMargin()
     }
 }
+*/
 
 

@@ -1,19 +1,19 @@
 package com.example.aure.db
 
 import com.example.aure.db.utils.Tables
-import com.example.aure.model.Catch.Catch
-import com.example.aure.model.Catch.CatchReport
-import com.example.aure.utils.toMapAndExclude
+import com.example.aure.model.Catch.*
 import com.example.aure.model.Weather.UvIndex
 import com.example.aure.model.Weather.Weather
 import com.example.aure.model.Weather.Wind
+import com.example.aure.utils.buildFieldQueryString
+import com.example.aure.utils.buildSetQueryString
+import com.example.aure.utils.buildValueQueryString
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.ResultSet
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import javax.annotation.Resource
 import javax.sql.DataSource
+
 
 @Repository
 class CatchReportDaoImpl {
@@ -27,100 +27,167 @@ class CatchReportDaoImpl {
 
     fun getCatchReport(user_id: String): List<CatchReport> {
         return namedParameterJdbcTemplate.query(
-            GET_QUERY, mapOf<String, String>("user_id" to user_id)
+            GET_QUERY(), mapOf<String, String>("user_id" to user_id)
         ) { rs: ResultSet, _ ->
             toCatchReport(rs)
         }
     }
 
     fun createCatchReport(user_id: String, catchReport: CatchReport) {
-        val catchReportMap = toMapAndExclude(catchReport, include = mapOf("user_id" to user_id), exclude = listOf("id", "user_id", "catchreport_id"))
+        val catchReportMap = catchReport.buildCatchReportDatabaseMap(user_id)
         namedParameterJdbcTemplate.query(
-            POST_QUERY, catchReportMap
-        ){}
+            POST_QUERY(
+                CatchReport.getCatchReportDatabaseFields(),
+                CatchReport.getWeatherDatabaseFields(),
+                catchReport.images.map { it.image_id }.toList().toString()
+            ), catchReportMap
+        ) {}
     }
 
     fun updateCatchReport(user_id: String, catchReport: CatchReport) {
-        val catchReportMap = toMapAndExclude(catchReport, include = mapOf("user_id" to user_id), exclude = listOf("user_id", "catchreport_id"))
+        val catchReportMap = catchReport.buildCatchReportDatabaseMap(user_id)
         namedParameterJdbcTemplate.query(
-            PUT_QUERY, catchReportMap
+            PUT_QUERY(
+                CatchReport.getCatchReportDatabaseFields(),
+                CatchReport.getWeatherDatabaseFields(),
+                catchReport.images.map { it.image_id }.toList().toString(),
+                catchReport.id!!
+            ), catchReportMap
         ) {}
     }
 
     companion object {
 
-        // Selects catchreport and weather based on user_id and primary/foreignkey
-        val GET_QUERY = """
-            SELECT * FROM ${Tables.CATCH_REPORT} 
-            LEFT JOIN ${Tables.WEATHER} 
-            ON (${Tables.CATCH_REPORT}.id = ${Tables.WEATHER}.catchreport_id)
-            WHERE ${Tables.CATCH_REPORT}.user_id = (:user_id)
-        """.trimIndent()
+        fun GET_QUERY(): String {
+            return """
+                SELECT * FROM ${Tables.CATCH_REPORT} 
+                LEFT JOIN ${Tables.WEATHER} 
+                ON (${Tables.CATCH_REPORT}.id = ${Tables.WEATHER}.catchreport_id)
+                WHERE ${Tables.CATCH_REPORT}.user_id = (:user_id)
+                """.trimIndent()
+        }
+
+        fun POST_QUERY(
+            catchReportFieldList: List<String>,
+            weatherFieldList: List<String>,
+            image_ids: String
+        ): String {
+            return """WITH cinsert as (
+                        INSERT INTO ${Tables.CATCH_REPORT} 
+                            (user_id, image_ids, ${buildFieldQueryString(catchReportFieldList, prefix = "")}
+                        VALUES 
+                            (:user_id, ARRAY $image_ids, ${buildValueQueryString(catchReportFieldList, prefix = "")}
+                        RETURNING id
+                        )
+                    
+                    INSERT INTO ${Tables.WEATHER} 
+                        (catchreport_id, user_id, ${buildFieldQueryString(weatherFieldList, prefix = "")}
+                    VALUES 
+                        ((SELECT id FROM cinsert), :user_id, ${buildValueQueryString(weatherFieldList, prefix = "")}
+                    RETURNING catchreport_id
+
+                    """.trimIndent()
+        }
 
         // Updates current catchreport with updated values
-        val PUT_QUERY = """
+        fun PUT_QUERY(
+            catchReportFieldList: List<String>,
+            weatherFieldList: List<String>,
+            image_ids: String,
+            id: Int
+        ): String {
+            return """
             WITH cupdate as (
                 UPDATE ${Tables.CATCH_REPORT}
-                SET water = (:water), species = (:species), weight = (:weight), length = (:length), captureDate = (:captureDate), fly = (:fly), waterTemp = (:waterTemp), longitude = (:longitude), latitude = (:latitude) 
+                SET 
+                    image_ids = ARRAY $image_ids, ${buildSetQueryString(catchReportFieldList)}
                 WHERE user_id = (:user_id) 
-                AND id = (:id)
+                AND id = $id
                 RETURNING id
             )
             UPDATE ${Tables.WEATHER}
-            SET  temperature = (:temperature), apparenttemperature = (:apparentTemperature), wind_direction = (:direction), wind_compassdirection = (:compassDirection), 
-                                wind_gust = (:gust), uvindex_value = (:value), uvindex_category = (:category), visibility = (:visibility), isDayLight = (:isDayLight), 
-                                humidity = (:humidity), dewPoint = (:dewPoint), pressure = (:pressure), pressuretrend = (:pressureTrend), symbolname = (:symbolName)
+            SET 
+                ${buildSetQueryString(weatherFieldList)}
             WHERE user_id = (:user_id)
             AND catchreport_id = (SELECT id FROM cupdate)
             RETURNING catchreport_id
-            
         """.trimIndent()
+        }
 
-        // Inserts and links catchreport and weather tables on id/catchreport_id.
-        val POST_QUERY = """
-            WITH cinsert as (
-                INSERT INTO ${Tables.CATCH_REPORT} (user_id, water, species, weight, length, captureDate, fly, waterTemp, longitude, latitude)
-                VALUES (:user_id, :water, :species, :weight, :length, :captureDate, :fly, :waterTemp, :longitude, :latitude) 
-                RETURNING id
-            )
-            INSERT INTO ${Tables.WEATHER} (catchreport_id, user_id, temperature, apparenttemperature, wind_direction, wind_compassdirection, wind_gust, uvindex_value, uvindex_category, visibility, isDayLight, humidity, dewPoint, pressure, pressuretrend, symbolname)
-            VALUES ((SELECT id FROM cinsert), :user_id, :temperature, :apparentTemperature, :direction, :compassDirection, :gust, :value, :category, :visibility, :isDayLight, :humidity, :dewPoint, :pressure, :pressureTrend, :symbolName)
-            RETURNING catchreport_id
-        """.trimIndent()
 
         fun toCatchReport(rs: ResultSet): CatchReport {
+            // TODO Fix parsing of image_ids ("[1,2,3]" -> [1,2,3])
+            val imageIds = rs.getObject("image_ids")
+                .toString()
+                .replace("{", "")
+                .replace("}", "")
+                .split(",")
+                .map { it.toInt() }
+
             return CatchReport(
-                Catch(
-                    rs.getInt("id"),
-                    rs.getString("water"),
-                    rs.getString("species"),
-                    rs.getBigDecimal("weight"),
-                    rs.getBigDecimal("length"),
-                    rs.getTimestamp("captureDate").toLocalDateTime(),
-                    rs.getString("fly"),
-                    rs.getBigDecimal("waterTemp"),
-                    rs.getBigDecimal("longitude"),
-                    rs.getBigDecimal("latitude")
-                ), Weather(
+                id = rs.getInt("id"),
+                notes = rs.getString("notes"),
+                water = Water(
+                    water_name = rs.getString("water_name"),
+                    water_level = rs.getString("water_level"),
+                    water_temperature = rs.getString("water_temperature")
+                ),
+                species = Species(
+                    rs.getString("species_name"),
+                    rs.getBigDecimal("species_weight"),
+                    rs.getBigDecimal("species_length"),
+                    rs.getString("species_gender")
+                ),
+                gear = Gear(
+                    rod = Rod(
+                        rs.getString("rod_brand"),
+                        rs.getString("rod_sizeClass")
+                    ),
+                    reel = Reel(
+                        rs.getString("reel_brand"),
+                        rs.getString("reel_sizeClass"),
+                        rs.getString("reel_fishingline"),
+                        rs.getString("reel_lineType")
+                    ),
+                    lure = Lure(
+                        rs.getString("lure_name"),
+                        rs.getString("lure_sizeClass"),
+                        rs.getString("lure_type"),
+                    )
+                ),
+                location = Location(
+                    rs.getString("location_municipality"),
+                    rs.getString("location_county"),
+                    rs.getString("location_country"),
+                    rs.getBigDecimal("location_latitude"),
+                    rs.getBigDecimal("location_longitude"),
+                    rs.getInt("location_mamsl")
+                ),
+                weather = Weather(
                     rs.getInt("catchreport_id"),
-                    rs.getBigDecimal("temperature"),
-                    rs.getBigDecimal("apparentTemperature"),
+                    rs.getBigDecimal("weather_temperature"),
+                    rs.getBigDecimal("weather_apparentTemperature"),
                     Wind(
                         rs.getBigDecimal("wind_direction"),
                         rs.getString("wind_compassDirection"),
                         rs.getBigDecimal("wind_gust")
                     ),
                     UvIndex(
-                        rs.getBigDecimal("uvindex_value"), rs.getString("uvindex_category")
+                        rs.getBigDecimal("uvindex_value"),
+                        rs.getString("uvindex_category")
                     ),
-                    rs.getBigDecimal("visibility"),
-                    rs.getBoolean("isDayLight"),
-                    rs.getBigDecimal("humidity"),
-                    rs.getBigDecimal("dewPoint"),
-                    rs.getBigDecimal("pressure"),
-                    rs.getString("pressureTrend"),
-                    rs.getString("symbolName")
-                )
+                    rs.getBigDecimal("weather_visibility"),
+                    rs.getBoolean("weather_isDayLight"),
+                    rs.getBigDecimal("weather_humidity"),
+                    rs.getBigDecimal("weather_dewPoint"),
+                    rs.getBigDecimal("weather_pressure"),
+                    rs.getString("weather_pressureTrend"),
+                    rs.getString("weather_symbolName")
+                ),
+                captureDate = rs.getTimestamp("captureDate").toLocalDateTime(),
+                images = imageIds.map {
+                    Image(it, null)
+                }
             )
         }
     }

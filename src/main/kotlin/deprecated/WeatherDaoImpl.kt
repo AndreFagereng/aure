@@ -1,4 +1,5 @@
-package com.example.aure.db
+package deprecated
+/*
 
 import com.example.aure.model.Weather.UvIndex
 import com.example.aure.model.Weather.Weather
@@ -10,7 +11,7 @@ import javax.annotation.Resource
 import javax.sql.DataSource
 
 @Repository
-class WeatherDaoImpl {
+class _WeatherDaoImpl {
 
     private lateinit var namedParameterJdbcTemplate: NamedParameterJdbcTemplate
 
@@ -55,20 +56,20 @@ class WeatherDaoImpl {
             createWeatherQuery, mapOf(
             "catchreport_id" to catchreport_id,
             "user_id" to user_id,
-            "temperature" to weather.temperature,
-            "apparentTemperature" to weather.apparentTemperature,
-            "wind_direction" to weather.wind.direction,
-            "wind_compassDirection" to weather.wind.compassDirection,
-            "wind_gust" to weather.wind.gust,
-            "uvindex_value" to weather.uvIndex.value,
-            "uvindex_category" to weather.uvIndex.category,
-            "visibility" to weather.visibility,
-            "isDayLight" to weather.isDayLight,
-            "humidity" to weather.humidity,
-            "dewPoint" to weather.dewPoint,
-            "pressure" to weather.pressure,
-            "pressureTrend" to weather.pressureTrend,
-            "symbolName" to weather.symbolName
+            "temperature" to weather.weather_temperature,
+            "apparentTemperature" to weather.weather_apparentTemperature,
+            "wind_direction" to weather.wind.wind_direction,
+            "wind_compassDirection" to weather.wind.wind_compassDirection,
+            "wind_gust" to weather.wind.wind_gust,
+            "uvindex_value" to weather.uvIndex.uvindex_value,
+            "uvindex_category" to weather.uvIndex.uvindex_category,
+            "visibility" to weather.weather_visibility,
+            "isDayLight" to weather.weather_isDayLight,
+            "humidity" to weather.weather_humidity,
+            "dewPoint" to weather.weather_dewPoint,
+            "pressure" to weather.weather_pressure,
+            "pressureTrend" to weather.weather_pressureTrend,
+            "symbolName" to weather.weather_symbolName
         ))
     }
 
@@ -90,4 +91,4 @@ class WeatherDaoImpl {
     }
 
 
-}
+}*/
