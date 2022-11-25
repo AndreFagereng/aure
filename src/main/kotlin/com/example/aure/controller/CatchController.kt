@@ -17,8 +17,13 @@ class CatchController {
     private lateinit var catchReportService: CatchReportService
 
     @GetMapping(produces = ["application/json"])
-    private fun getCatchReport(principal: JwtAuthenticationToken): List<CatchReport> {
-        return catchReportService.getCatchReport(principal.name)
+    private fun getCatchReport(
+        principal: JwtAuthenticationToken,
+        @RequestParam(value = "size", required = true) size: Int,
+        @RequestParam(value = "at", required = true) at: Int
+    ): List<CatchReport> {
+
+        return catchReportService.getCatchReport(principal.name, at, size)
     }
 
     @PostMapping(consumes = ["application/json"])

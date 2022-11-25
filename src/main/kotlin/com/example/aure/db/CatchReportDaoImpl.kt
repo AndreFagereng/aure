@@ -25,9 +25,11 @@ class CatchReportDaoImpl {
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource!!)
     }
 
-    fun getCatchReport(user_id: String): List<CatchReport> {
+    fun getCatchReport(user_id: String, at: Int, size: Int): List<CatchReport> {
+        val getIdFrom = at
+        val getIdTo = at + size
         return namedParameterJdbcTemplate.query(
-            GET_QUERY(), mapOf<String, String>("user_id" to user_id)
+            GET_QUERY(), mapOf<String, Any>("user_id" to user_id, "from" to getIdFrom, "to" to getIdTo)
         ) { rs: ResultSet, _ ->
             toCatchReport(rs)
         }
@@ -60,10 +62,12 @@ class CatchReportDaoImpl {
 
         fun GET_QUERY(): String {
             return """
-                SELECT * FROM ${Tables.CATCH_REPORT} 
+                SELECT row_number() over(ORDER BY ${Tables.CATCH_REPORT}.id), * 
+                FROM ${Tables.CATCH_REPORT}
                 LEFT JOIN ${Tables.WEATHER} 
                 ON (${Tables.CATCH_REPORT}.id = ${Tables.WEATHER}.catchreport_id)
                 WHERE ${Tables.CATCH_REPORT}.user_id = (:user_id)
+                AND ${Tables.CATCH_REPORT}.id BETWEEN (:from) AND (:to)
                 """.trimIndent()
         }
 

@@ -29,7 +29,7 @@ class AWSConfig {
     fun awsS3Client(): S3Client {
         val region: Region = Region.EU_NORTH_1
         return S3Client
-            .builder().credentialsProvider(ProfileCredentialsProvider.create())
+            .builder()
             .region(region)
             .build()
     }

@@ -16,8 +16,8 @@ class CatchReportService {
     @Autowired
     private lateinit var imageService: ImageService
 
-    fun getCatchReport(user_id: String): List<CatchReport> {
-        val catchReports = catchReportDaoImpl.getCatchReport(user_id)
+    fun getCatchReport(user_id: String, at: Int, size: Int): List<CatchReport> {
+        val catchReports = catchReportDaoImpl.getCatchReport(user_id, at, size)
 
         for (cr in catchReports) {
 
