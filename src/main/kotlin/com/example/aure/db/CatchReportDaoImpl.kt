@@ -26,8 +26,9 @@ class CatchReportDaoImpl {
     }
 
     fun getCatchReport(user_id: String, at: Int, size: Int): List<CatchReport> {
-        val getIdFrom = at
-        val getIdTo = at + size
+        val getIdFrom = at.takeUnless { it == 0 } ?: 1
+        val getIdTo = (getIdFrom + size) - 1
+
         return namedParameterJdbcTemplate.query(
             GET_QUERY(), mapOf<String, Any>("user_id" to user_id, "from" to getIdFrom, "to" to getIdTo)
         ) { rs: ResultSet, _ ->
@@ -62,12 +63,15 @@ class CatchReportDaoImpl {
 
         fun GET_QUERY(): String {
             return """
-                SELECT row_number() over(ORDER BY ${Tables.CATCH_REPORT}.id), * 
-                FROM ${Tables.CATCH_REPORT}
-                LEFT JOIN ${Tables.WEATHER} 
-                ON (${Tables.CATCH_REPORT}.id = ${Tables.WEATHER}.catchreport_id)
-                WHERE ${Tables.CATCH_REPORT}.user_id = (:user_id)
-                AND ${Tables.CATCH_REPORT}.id BETWEEN (:from) AND (:to)
+                SELECT * FROM (
+                    SELECT row_number() over(ORDER BY ${Tables.CATCH_REPORT}.id) as rownumber, * 
+                    FROM ${Tables.CATCH_REPORT}
+                    LEFT JOIN ${Tables.WEATHER} we
+                    ON (${Tables.CATCH_REPORT}.id = we.catchreport_id)
+                    WHERE ${Tables.CATCH_REPORT}.user_id = (:user_id)
+                    ORDER BY capturedate ASC
+                ) e
+                WHERE rownumber BETWEEN (:from) AND (:to)
                 """.trimIndent()
         }
 

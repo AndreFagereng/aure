@@ -22,7 +22,6 @@ class CatchController {
         @RequestParam(value = "size", required = true) size: Int,
         @RequestParam(value = "at", required = true) at: Int
     ): List<CatchReport> {
-
         return catchReportService.getCatchReport(principal.name, at, size)
     }
 

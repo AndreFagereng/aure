@@ -17,6 +17,7 @@ enum class FisherType {
 }
 
 data class UserProfile(
+    val id: Int?,
     val nickname: String,
     val rod: Rod,
     val reel: Reel,

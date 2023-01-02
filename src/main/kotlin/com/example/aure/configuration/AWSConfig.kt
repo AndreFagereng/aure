@@ -7,6 +7,8 @@ import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
@@ -30,6 +32,7 @@ class AWSConfig {
         val region: Region = Region.EU_NORTH_1
         return S3Client
             .builder()
+            .credentialsProvider(InstanceProfileCredentialsProvider.builder().build())
             .region(region)
             .build()
     }
