@@ -3,13 +3,11 @@ package com.example.aure.model.Feed
 import com.example.aure.model.Catch.CatchReport
 import java.time.LocalDateTime
 
-// TODO
-
 data class Like(
     val id: Int,
     val feedId: Int,
     val nickname: String,
-    val type: String  // (heart, thumbs-up)
+    val type: String
     )
 
 data class Comment(

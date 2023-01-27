@@ -16,7 +16,6 @@ class SecurityConfiguration {
     @Throws(java.lang.Exception::class)
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
-
         http.cors().disable().csrf().disable().authorizeRequests()
             .antMatchers("/ping", "/")
             .permitAll()

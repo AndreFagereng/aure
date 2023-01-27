@@ -6,10 +6,7 @@ import com.amazonaws.services.secretsmanager.AWSSecretsManager
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider
-import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+import software.amazon.awssdk.auth.credentials.*
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 
@@ -24,7 +21,6 @@ class AWSConfig {
             .withCredentials(DefaultAWSCredentialsProviderChain())
             .withRegion(Regions.fromName("eu-north-1"))
             .build()
-
     }
 
     @Bean

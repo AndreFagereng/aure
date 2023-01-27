@@ -15,6 +15,4 @@ class FeedDaoImpl {
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource!!)
     }
 
-
-
 }

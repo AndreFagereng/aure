@@ -1,8 +1,6 @@
 package com.example.aure.model.Catch
 
-import com.example.aure.model.Weather.UvIndex
 import com.example.aure.model.Weather.Weather
-import com.example.aure.model.Weather.Wind
 import com.example.aure.utils.toMapAndExcludeInclude
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -15,7 +13,7 @@ data class CatchReport(
     val species: Species,
     val gear: Gear,
     val location: Location,
-    val weather: Weather,
+    val weather: Weather?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     val captureDate: LocalDateTime,
     val notes: String,
@@ -24,9 +22,7 @@ data class CatchReport(
 ) {
     fun buildCatchReportDatabaseMap(user_id: String): Map<String, Any?> {
         val excludeValues = listOf("id", "catchreport_id", "images")
-        val includeMap = mapOf(
-            "user_id" to user_id,
-        )
+        val includeMap = mapOf("user_id" to user_id)
         return toMapAndExcludeInclude(
             this,
             include = includeMap,
@@ -35,13 +31,8 @@ data class CatchReport(
     }
     companion object {
         fun getCatchReportDatabaseFields(): List<String> {
-            val includeFields = listOf(
-                "captureDate",
-                "notes",
-                )
-            val excludeFields = listOf(
-                "water"
-            )
+            val includeFields = listOf("captureDate", "notes")
+            val excludeFields = listOf("water")
             val crdbFields = mutableListOf<String>()
             crdbFields.addAll(Lure::class.declaredMemberProperties.map { it.name })
             crdbFields.addAll(Reel::class.declaredMemberProperties.map { it.name })
@@ -59,13 +50,9 @@ data class CatchReport(
             val includeFields = listOf<String>()
             val excludeFields = listOf(
                 "catchreport_id",
-                "uvIndex",
-                "wind"
             )
             val crdbFields = mutableListOf<String>()
             crdbFields.addAll(Weather::class.declaredMemberProperties.map { it.name })
-            crdbFields.addAll(Wind::class.declaredMemberProperties.map { it.name })
-            crdbFields.addAll(UvIndex::class.declaredMemberProperties.map { it.name })
 
             crdbFields.addAll(includeFields)
             crdbFields.removeAll(excludeFields)

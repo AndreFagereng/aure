@@ -13,5 +13,4 @@ class FeedController {
     @Autowired
     lateinit var feedService: FeedService
 
-
 }
