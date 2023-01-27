@@ -32,9 +32,20 @@ class ImageDaoImpl {
         return keyHolder.key?.toInt()
     }
 
-    fun getImageFilepath(ids: List<Image>): List<Map<String, String>> {
+    fun getImage(id: Int): Map<String, String> {
+        val parameters = mapOf("id" to id)
+        val res =  namedParameterJdbcTemplate.query(GET_SINGLE_IMAGE_QUERY, parameters) { rs: ResultSet, _ ->
+            mapOf(
+                "id" to rs.getString("id"),
+                "filepath" to rs.getString("filepath")
+            )
+        }
+        return res.first()
+    }
+
+    fun getImagesFilepath(ids: List<Image>): List<Map<String, String>> {
         val imageMap: Map<String, Any> = mapOf("ids" to ids.map { it.image_id })
-        return namedParameterJdbcTemplate.query(GET_IMAGE_QUERY, imageMap) { rs: ResultSet, _ ->
+        return namedParameterJdbcTemplate.query(GET_IMAGES_QUERY, imageMap) { rs: ResultSet, _ ->
             mapOf(
                 "id" to rs.getString("id"),
                 "filepath" to rs.getString("filepath")
@@ -48,9 +59,14 @@ class ImageDaoImpl {
             VALUES (:filepath)
         """.trimIndent()
 
-        val GET_IMAGE_QUERY = """
+        val GET_IMAGES_QUERY = """
             SELECT * FROM ${Tables.IMAGE_STORE}
             WHERE id IN (:ids)
+        """.trimIndent()
+
+        val GET_SINGLE_IMAGE_QUERY = """
+            SELECT * FROM ${Tables.IMAGE_STORE}
+            WHERE id = (:id)
         """.trimIndent()
     }
 

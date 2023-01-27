@@ -8,12 +8,16 @@ class HelperFunctions {
 /**
  * SQL query builders for Fields, Values, Set.
  * */
+
+// (var, var, var)
 fun buildFieldQueryString(fieldList: List<String>, prefix: String = "(", postfix: String = ")"): String {
     return fieldList.joinToString(separator = ", ", prefix = prefix, postfix = postfix, transform = { it })
 }
+//(:var, :var, :var)
 fun buildValueQueryString(fieldList: List<String>, prefix: String = "(", postfix: String = ")"): String {
     return fieldList.joinToString(separator = ", ", prefix = prefix, postfix = postfix, transform = { ":$it" })
 }
+// var = (:var), var = (:var)
 fun buildSetQueryString(fieldList: List<String>, prefix: String = "", postfix: String = ""): String {
     return fieldList.joinToString(separator = ", ", prefix=prefix, postfix=postfix, transform = {"$it = (:$it)"})
 }
@@ -36,7 +40,7 @@ fun <T : Any> toMapAndExcludeInclude(
     include.forEach { (key, value) ->
         mutableFinalMap[key] = value
     }
-    println("toMapAndExclude -> $mutableFinalMap")
+
     return mutableFinalMap
 
 }

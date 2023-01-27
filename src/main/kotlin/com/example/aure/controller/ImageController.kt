@@ -26,9 +26,8 @@ class ImageController {
     }
 
     @GetMapping
-    fun getPresignedImage(): String {
-        val key = ""
-        return imageService.getPresignedImage(key)
+    fun getImage(principal: JwtAuthenticationToken, @RequestParam(value = "id", required = true) id: Int): Image {
+        return imageService.getImage(id)
     }
 
 }

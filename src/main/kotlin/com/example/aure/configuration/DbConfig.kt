@@ -12,7 +12,7 @@ import javax.sql.DataSource
 class DbConfig {
     @Bean(name = ["aure-db"])
     @ConfigurationProperties(prefix = "aure-dataservice")
-    @Primary // nødvendig?
+    @Primary
     fun createM2DataService(): DataSource {
         return DataSourceBuilder.create().build()
     }

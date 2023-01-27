@@ -25,12 +25,20 @@ class ImageService {
     @Autowired
     lateinit var imageDaoImpl: ImageDaoImpl
 
-    val BUCKET: String = "aure-image-storage"
-    val URL_DURATION: Long = 5
+    val originalBasePath = "original_images/"
+    val thumbnailBasePath = "thumbnails/"
+    val bucket: String = "aure-image-storage"
+    val urlDuration: Long = 5
+
+    fun getImage(id: Int): Image {
+        val imageMap = imageDaoImpl.getImage(id)
+        return Image(
+            image_id = imageMap["id"]!!.toInt(),
+            image_url = getPresignedImage(imageMap["filepath"]!!)
+        )
+    }
 
     fun postImage(user_id: String, inputStream: InputStream): Image {
-
-        // Uploads image to S3
         val s3FilePath = uploadImageFileToS3(user_id, inputStream)
 
         // Stores s3FilePath to RDS and returns row ID
@@ -39,11 +47,7 @@ class ImageService {
         )
 
         return Image(imageId, s3FilePath)
-//        imageId?.let {
-//            return Image(imageId, s3FilePath)
-//        } ?: run {
-//            throw Exception("ImageService.uploadImageFile --> ImageId is null")
-//        }
+
     }
 
     private fun createPutObjectRequest(bucket: String, filePath: String): PutObjectRequest {
@@ -57,17 +61,16 @@ class ImageService {
     private fun uploadImageFileToS3(user_id: String, inputStream: InputStream): String {
 
         val uniqueFilename = UUID.randomUUID().toString()
-        val filePath = "$user_id/$uniqueFilename.jpg"
-        val request = createPutObjectRequest(BUCKET, filePath)
+        val filePath = "original_images/$user_id/$uniqueFilename.jpg"
+        val request = createPutObjectRequest(bucket, filePath)
 
-        // TODO Create a S3ClientWaiter instead to verify the putObject call
         s3Client.putObject(request, RequestBody.fromInputStream(inputStream, inputStream.available().toLong()))
         return filePath
 
     }
 
     fun getImageFilepath(imageIds: List<Image>): List<Map<String, String>> {
-        return imageDaoImpl.getImageFilepath(imageIds)
+        return imageDaoImpl.getImagesFilepath(imageIds)
     }
 
     private fun saveFilePathToRDS(filePath: String): Int? {
@@ -77,7 +80,7 @@ class ImageService {
     fun getPresignedImage(key: String): String {
         val getObjectRequest: GetObjectRequest = GetObjectRequest
             .builder()
-            .bucket(BUCKET)
+            .bucket(bucket)
             .key(key)
             .build()
 
@@ -85,12 +88,16 @@ class ImageService {
 
         val getObjectPresignRequest = GetObjectPresignRequest
             .builder()
-            .signatureDuration(Duration.ofMinutes(URL_DURATION))
+            .signatureDuration(Duration.ofMinutes(urlDuration))
             .getObjectRequest(getObjectRequest)
             .build()
 
         val presignedGetObjectRequest: PresignedGetObjectRequest = s3Presigner.presignGetObject(getObjectPresignRequest)
 
         return presignedGetObjectRequest.url().toString()
+    }
+
+    fun toThumbnailPath(path: String): String {
+        return path.replace(originalBasePath, thumbnailBasePath)
     }
 }

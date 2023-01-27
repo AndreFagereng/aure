@@ -1,22 +1,17 @@
 package com.example.aure.model.User
 
-import com.example.aure.model.Catch.Gear
 import com.example.aure.model.Catch.Reel
 import com.example.aure.model.Catch.Rod
-import com.example.aure.model.Catch.Water
 import com.example.aure.utils.toMapAndExcludeInclude
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import kotlin.reflect.full.declaredMemberProperties
 
-/**
- * TODO
- * Utfyll og implementer FisherType Enum i UserProfile
- * */
+
 enum class FisherType {
     FLYFISHER, BAITFISHER, TROLLING, SPINNING
 }
 
 data class UserProfile(
+    val id: Int?,
     val nickname: String,
     val rod: Rod,
     val reel: Reel,

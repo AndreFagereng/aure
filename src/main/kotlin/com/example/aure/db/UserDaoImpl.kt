@@ -14,7 +14,7 @@ import javax.annotation.Resource
 import javax.sql.DataSource
 
 @Repository
-class UserProfileDaoImpl {
+class UserDaoImpl {
 
     lateinit var namedParameterJdbcTemplate: NamedParameterJdbcTemplate
 
@@ -23,23 +23,50 @@ class UserProfileDaoImpl {
         namedParameterJdbcTemplate = NamedParameterJdbcTemplate(dataSource!!)
     }
 
+    fun getFriends(user_id: String) {
+        print("getFriends not implemented..")
+        TODO()
+    }
+
+    fun addFriend(sender_id: Int, recipient_id: Int) {
+        namedParameterJdbcTemplate.query(
+            ADD_FRIEND(),
+            mapOf<String, Any>("sender_id" to sender_id, "recipient_id" to recipient_id, "accepted" to false)
+        ) {}
+    }
+
+    fun acceptFriend(sender_id: Int, recipient_id: Int) {
+        namedParameterJdbcTemplate.query(
+            ACCEPT_FRIEND(), mapOf<String, Any>("sender_id" to sender_id, "recipient_id" to recipient_id)
+        ) { }
+    }
+
+    fun removeFriend(sender_id: Int, recipient_id: Int) {
+        namedParameterJdbcTemplate.query(
+            REMOVE_FRIEND(), mapOf<String, Any>("sender_id" to sender_id, "recipient_id" to recipient_id)
+        ) { }
+    }
+
     fun getUserProfile(user_id: String): UserProfile {
         return namedParameterJdbcTemplate.query(
-            GET_QUERY(), mapOf<String, String>("user_id" to user_id)
+            GET_USERPROFILE, mapOf<String, String>("user_id" to user_id)
         ) { rs: ResultSet, _ ->
             toUserProfile(rs)
         }.single()
     }
 
-    fun createOrUpdateUserProfile(user_id: String, userProfile: UserProfile) {
+    fun upsertUserProfile(user_id: String, userProfile: UserProfile) {
         val userProfileMap = userProfile.buildUserProfileDatabaseMap(user_id)
-        namedParameterJdbcTemplate.update(PUTPOST_QUERY(
-            UserProfile.userProfileDatabaseFields()
-        ), userProfileMap)
+        namedParameterJdbcTemplate.update(
+            UPSERT_USERPROFILE(
+                UserProfile.userProfileDatabaseFields()
+            ), userProfileMap
+        )
     }
 
     private fun toUserProfile(rs: ResultSet): UserProfile {
         return UserProfile(
+            rs.getInt("id"),
             rs.getString("nickname"),
             Rod(
                 rs.getString("rod_brand"),
@@ -58,13 +85,40 @@ class UserProfileDaoImpl {
 
     companion object {
 
-        // Selects catchreport and weather based on user_id and primary/foreignkey
-        fun GET_QUERY() = """
+        //id, sender_id, recipient_id, status
+        fun ADD_FRIEND() = """
+            INSERT INTO ${Tables.FRIENDSHIPS} (sender_id, recipient_id, accepted)
+            VALUES (:sender_id, :recipient_id, :accepted)
+            RETURNING id
+        """.trimIndent()
+
+        fun REMOVE_FRIEND() = """
+            DELETE FROM ${Tables.FRIENDSHIPS}
+            WHERE (sender_id = (:sender_id) AND recipient_id = (:recipient_id))
+            OR (sender_id = (:recipient_id) AND recipient_id = (:sender_id)) 
+            RETURNING id
+        """.trimIndent()
+
+        fun ACCEPT_FRIEND() = """
+            UPDATE ${Tables.FRIENDSHIPS}
+            SET accepted = true
+            WHERE (sender_id = (:sender_id) AND recipient_id = (:recipient_id))
+            OR (sender_id = (:recipient_id) AND recipient_id = (:sender_id))
+            RETURNING id
+        """.trimIndent()
+
+        fun CANCEL_FRIEND_REQUEST() = """
+            DELETE FROM ${Tables.FRIENDSHIPS}
+            WHERE sender_id = (:sender_id)
+            AND recipient_id = (:recipient_id)
+        """.trimIndent()
+
+        val GET_USERPROFILE = """
             SELECT * FROM ${Tables.USER_PROFILE} 
             WHERE ${Tables.USER_PROFILE}.user_id = (:user_id)
         """.trimIndent()
 
-        fun PUTPOST_QUERY(
+        fun UPSERT_USERPROFILE(
             userProfileFieldList: List<String>,
         ) = """
             INSERT INTO ${Tables.USER_PROFILE} (user_id, ${buildFieldQueryString(userProfileFieldList, prefix = "")}
